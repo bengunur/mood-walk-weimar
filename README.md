@@ -30,6 +30,21 @@ Drag to orbit, right-drag to pan, scroll to zoom. Every push to `main` publishes
 - Residents are assumed to be spread evenly over each 100 m cell, which is rarely true. The census also changes small counts slightly at random to protect privacy, so the figures are approximate.
 - Building uses are the use with the largest floor area, and floor areas are estimates.
 
+## Mood Walk
+
+Switch the panel to **Mood Walk**, choose a mood and click on the ground. The app suggests a walk from that point, drawn in the colour of its mood (sage for Calm, amber for Curious, coral for Energetic) with arrows for the direction, and shows its distance, duration and a short explanation built from the measured numbers. "Show another route" gives up to five clearly different suggestions.
+
+| Mood | Target | What it prefers |
+| --- | --- | --- |
+| Calm | about 15 min, 1,200 m | few turns at junctions |
+| Curious | about 30 min, 2,400 m | many different street stretches, and buildings of many different uses within 25 m |
+| Energetic | about 45 min, 3,600 m | the longer target length |
+
+- **Candidates.** About 60 walks go out to one or two points on the network and come back, each part along the shortest way. On the way back, streets already walked count as five times their length, so the walk takes other streets where it can. Each candidate is scored for the mood, and walking a street twice counts against it for every mood.
+- **Measures.** A turn is a change of direction of more than 40° at a junction, a node where three or more street segments meet. A street stretch runs from one junction to the next. Building uses come from `buildings.geojson`; their mix is a rough stand-in for urban variety, not a measure of how interesting a street is.
+- **Loop or out and back.** A walk is called a loop when at most 20 % of it lies on streets walked twice, and an out-and-back walk from 80 %. In tests from 600 random points and from every dead end in the kit, all but one walk were loops; the one exception was a Calm walk partly on the same streets. Calm walks took 13 to 18 minutes, Curious 28 to 32 and Energetic 44 to 46.
+- **Limits.** Durations are approximate targets at 4.8 km/h. The kit has no data on greenery, noise, traffic, safety, lighting, slopes, steps or opening hours, so the moods describe only the length and shape of a walk. They don't say that a walk is safe, quiet, green or good for how you feel.
+
 ## Data sources
 
 The city kit in `public/data/` covers central Weimar, about 1.3 × 2 km. `public/data/SOURCES.md` lists every file, its source, licence and fields.

@@ -1,5 +1,6 @@
 import { BAND_MINUTES, BAND_WIDTH, MAX_START_DISTANCE, WALK_SPEED } from '../lib/reach.js'
 import { BAND_COLORS } from '../lib/palette.js'
+import MoodWalkPanel from './MoodWalkPanel.jsx'
 
 const format = (n) => n.toLocaleString('en-GB')
 
@@ -11,11 +12,34 @@ const MESSAGES = {
   building: 'That is a building. Click on the ground next to it.',
 }
 
-export default function Panel({ status, reach, error }) {
+const MODES = [
+  { id: 'reach', label: 'Reach' },
+  { id: 'mood', label: 'Mood Walk' },
+]
+
+export default function Panel({ mode, onMode, error, reachProps, moodProps }) {
+  return (
+    <aside className="panel">
+      <div className="mode-switch" role="group" aria-label="Tool">
+        {MODES.map((m) => (
+          <button key={m.id} type="button" aria-pressed={mode === m.id} onClick={() => onMode(m.id)}>
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {mode === 'mood' ? <MoodWalkPanel {...moodProps} error={error} /> : <ReachPanel {...reachProps} error={error} />}
+
+      <p className="controls">Drag to orbit · right-drag to pan · scroll to zoom</p>
+    </aside>
+  )
+}
+
+function ReachPanel({ status, reach, error }) {
   const message = error ? `Something went wrong: ${error}` : status === 'done' ? startText(reach) : MESSAGES[status]
 
   return (
-    <aside className="panel">
+    <>
       <h1>How far can you walk?</h1>
       <p className="subtitle">Central Weimar, on foot, from any point you click.</p>
 
@@ -74,9 +98,7 @@ export default function Panel({ status, reach, error }) {
           </li>
         </ul>
       </details>
-
-      <p className="controls">Drag to orbit · right-drag to pan · scroll to zoom</p>
-    </aside>
+    </>
   )
 }
 

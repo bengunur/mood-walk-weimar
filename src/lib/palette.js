@@ -6,6 +6,13 @@ export const TEAL = '#3e8a86' // the start marker and small highlights in the pa
 export const GROUND = '#efede7'
 export const BACKGROUND = '#e3e9ef'
 export const STREET = '#7d8794'
+// Mood Walk: one accent per mood, for the route, its arrows, the start marker and the panel.
+// The route gets a navy edge, so even the light sage stands out on the pale ground and next to the buildings.
+export const MOOD_COLORS = {
+  calm: '#80b8a5',
+  curious: '#e5ad65',
+  energetic: '#ef7968',
+}
 
 // 5, 10 and 15 minutes
 export const BAND_COLORS = ['#1f3c66', '#4f86c0', '#b4d3ec']

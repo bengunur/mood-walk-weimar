@@ -1,17 +1,17 @@
 import { useEffect, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
+import { Line, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import Buildings from './Buildings.jsx'
-import { AREA_COLORS, BACKGROUND, GROUND, STREET, TEAL } from '../lib/palette.js'
+import { AREA_COLORS, BACKGROUND, GROUND, MOOD_COLORS, NAVY, STREET, TEAL } from '../lib/palette.js'
 
 // A click only counts if the mouse moved less than this many pixels, so turning the view never starts a walk.
 const CLICK_TOLERANCE = 5
 
 // Heights in metres above the ground for the flat layers, so they don't flicker into each other.
-const LAYER_HEIGHT = { areas: [0.9, 0.6, 0.3], streets: 1.2 }
+const LAYER_HEIGHT = { areas: [0.9, 0.6, 0.3], streets: 1.2, route: 2.5 }
 
-export default function CityScene({ kit, reach, onPick, onBuildingClick }) {
+export default function CityScene({ kit, reach, walk, onPick, onBuildingClick }) {
   return (
     // `flat` turns off tone mapping, so the colours on screen match the legend.
     <Canvas flat camera={{ position: [350, 1500, 1550], fov: 40, near: 5, far: 20000 }}>
@@ -42,6 +42,8 @@ export default function CityScene({ kit, reach, onPick, onBuildingClick }) {
         <Streets lines={kit.streetLines} />
         {reach && <ReachAreas bands={reach.bands} />}
         {reach && <StartMarker xy={reach.start.xy} />}
+        {walk && <Route path={walk.path} color={MOOD_COLORS[walk.mood]} />}
+        {walk && <StartMarker xy={walk.start.xy} color={MOOD_COLORS[walk.mood]} stemColor={NAVY} ringColor={NAVY} />}
       </group>
     </Canvas>
   )
@@ -131,19 +133,76 @@ function AreaLayer({ polygons, color, height }) {
   )
 }
 
-// A pin at the street node where the walk starts.
-function StartMarker({ xy }) {
+// The Mood Walk route as a thick line just above the streets, with an arrow every 120 m for the direction.
+const ARROW_SPACING = 120 // metres
+// An arrowhead 24 m long and 20 m wide, pointing along +x, and a larger one under it for its navy edge.
+const arrowShape = (size) =>
+  new THREE.Shape([[12, 0], [-12, 10], [-6, 0], [-12, -10]].map(([x, y]) => new THREE.Vector2(x * size, y * size)))
+const ARROW_SHAPE = arrowShape(1)
+const ARROW_EDGE_SHAPE = arrowShape(1.4)
+
+// The route in the colour of its mood, on a navy edge that keeps it readable over the ground, streets and buildings.
+function Route({ path, color }) {
+  const points = useMemo(() => path.map(([x, y]) => [x, y, LAYER_HEIGHT.route]), [path])
+  const arrows = useMemo(() => {
+    const out = []
+    let next = ARROW_SPACING / 2
+    let walked = 0
+    for (let i = 0; i < path.length - 1; i++) {
+      const [ax, ay] = path[i]
+      const [bx, by] = path[i + 1]
+      const len = Math.hypot(bx - ax, by - ay)
+      while (len > 0 && next <= walked + len) {
+        const t = (next - walked) / len
+        out.push({ xy: [ax + (bx - ax) * t, ay + (by - ay) * t], angle: Math.atan2(by - ay, bx - ax) })
+        next += ARROW_SPACING
+      }
+      walked += len
+    }
+    return out
+  }, [path])
+
+  return (
+    <group>
+      <Line points={points} color={NAVY} lineWidth={8} />
+      <Line points={points} color={color} lineWidth={4.5} position={[0, 0, 0.3]} />
+      {arrows.map(({ xy, angle }, i) => (
+        // A flat arrowhead in the mood colour with a navy edge, pointing along the walk.
+        <group key={i} position={[xy[0], xy[1], LAYER_HEIGHT.route + 1]} rotation={[0, 0, angle]}>
+          <mesh position={[-1.5, 0, 0]}>
+            <shapeGeometry args={[ARROW_EDGE_SHAPE]} />
+            <meshBasicMaterial color={NAVY} side={THREE.DoubleSide} />
+          </mesh>
+          <mesh position={[0, 0, 0.5]}>
+            <shapeGeometry args={[ARROW_SHAPE]} />
+            <meshBasicMaterial color={color} side={THREE.DoubleSide} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  )
+}
+
+// A pin at the street node where the walk starts: teal for the reach; for a Mood Walk the mood colour
+// on a navy stem, with a navy ring round the ball so it stands out when seen from above.
+function StartMarker({ xy, color = TEAL, stemColor = TEAL, ringColor }) {
   const height = 60
   return (
     <group position={[xy[0], xy[1], 0]}>
       <mesh position={[0, 0, height / 2]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[3, 3, height, 12]} />
-        <meshLambertMaterial color={TEAL} />
+        <meshLambertMaterial color={stemColor} />
       </mesh>
       <mesh position={[0, 0, height]}>
         <sphereGeometry args={[12, 24, 16]} />
-        <meshLambertMaterial color={TEAL} />
+        <meshLambertMaterial color={color} />
       </mesh>
+      {ringColor && (
+        <mesh position={[0, 0, height]}>
+          <torusGeometry args={[12.5, 2.5, 8, 32]} />
+          <meshBasicMaterial color={ringColor} />
+        </mesh>
+      )}
     </group>
   )
 }
