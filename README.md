@@ -54,6 +54,6 @@ Buildings: 3D building models LoD2 © GDI-Th (dl-de/by-2-0). Land use and pedest
 ## How this was made
 
 1. Tools: Claude Code, with the model Claude Opus 5.5.
-2. I decided:
+2. I decided: I transformed the original walking accessibility map into Mood Walk, an interactive experience that suggests different walking routes based on three moods: Calm, Curious, and Energetic. I chose distinct visual identities for each mood and used measurable street-network characteristics instead of making unsupported claims about how a place feels.
 3. The agent did: built the 3D walking map from the starter prompt (data loading, the walk along the network, the 25 m areas, the building and resident counts, the panel, legend and this README) and checked the numbers against a second calculation.
-4. I checked:
+4. I checked: I tested all three moods on the local and published websites, verified that the suggested routes and walking durations worked as expected, and confirmed that the original Reach functionality was preserved.
